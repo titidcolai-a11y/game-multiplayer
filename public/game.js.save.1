@@ -1,0 +1,254 @@
+import * as THREE from "https://unpkg.com/three@0.180.0/build/three.module.js";
+import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
+import { joystick } from "./joystick.js";
+
+const socket = io();
+
+
+// SCENE
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87ceeb);
+
+
+// CAMERA
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+);
+
+
+// RENDERER
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+document.body.appendChild(renderer.domElement);
+
+
+// CAHAYA
+const light = new THREE.DirectionalLight(0xffffff, 2);
+light.position.set(5,10,5);
+scene.add(light);
+
+const ambient = new THREE.AmbientLight(0xffffff,0.5);
+scene.add(ambient);
+
+
+// TANAH
+const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(50,50),
+    new THREE.MeshStandardMaterial({
+        color:0x228B22
+    })
+);
+
+ground.rotation.x = -Math.PI/2;
+scene.add(ground);
+// Pohon
+function createTree(x, z) {
+
+    // Batang
+    const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.3, 2),
+        new THREE.MeshStandardMaterial({
+            color: 0x8B4513
+        })
+    );
+
+    trunk.position.set(x, 1, z);
+    scene.add(trunk);
+
+    // Daun
+    const leaves = new THREE.Mesh(
+        new THREE.SphereGeometry(1.2, 12, 12),
+        new THREE.MeshStandardMaterial({
+            color: 0x228B22
+        })
+    );
+
+    leaves.position.set(x, 2.8, z);
+    scene.add(leaves);
+
+}
+
+// PLAYER SENDIRI
+const player = new THREE.Mesh(
+player.castShadow = true;
+player.receiveShadow = true;
+    new THREE.BoxGeometry(1,2,1),
+    new THREE.MeshStandardMaterial({
+        color:0xff0000
+    })
+);
+
+player.position.set(0,1,0);
+scene.add(player);
+
+
+// PLAYER LAIN
+const players = {};
+
+function createPlayer(id,pos){
+
+    const other = new THREE.Mesh(
+        new THREE.BoxGeometry(1,2,1),
+        new THREE.MeshStandardMaterial({
+            color:0x0000ff
+        })
+    );
+
+    other.position.set(
+        pos.x,
+        pos.y,
+        pos.z
+    );
+
+    scene.add(other);
+
+    players[id] = other;
+}
+
+
+// TERIMA PLAYER
+socket.on("currentPlayers",(data)=>{
+
+    for(let id in data){
+
+        if(id !== socket.id){
+
+            createPlayer(id,data[id]);
+
+        }
+
+    }
+
+});
+
+
+// PLAYER BARU MASUK
+socket.on("newPlayer",(data)=>{
+
+    createPlayer(
+        data.id,
+        data.position
+    );
+
+});
+
+
+// GERAK PLAYER LAIN
+socket.on("playerMove",(data)=>{
+
+    if(players[data.id]){
+
+        players[data.id].position.set(
+            data.position.x,
+            data.position.y,
+            data.position.z
+        );
+
+    }
+
+});
+
+
+// PLAYER KELUAR
+socket.on("playerRemove",(id)=>{
+
+    if(players[id]){
+
+        scene.remove(players[id]);
+        delete players[id];
+
+    }
+
+});
+
+
+// GERAK
+let speed = 0.05;
+
+let velocityY = 0;
+let gravity = -0.015;
+let jumpPower = 0.25;
+let onGround = true;
+
+
+// LOOP GAME
+function animate(){
+
+    requestAnimationFrame(animate);
+
+
+    // JOYSTICK
+    player.position.x += joystick.x * speed;
+    player.position.z += joystick.y * speed;
+// Gravitasi
+velocityY += gravity;
+player.position.y += velocityY;
+
+if (player.position.y <= 1) {
+    player.position.y = 1;
+    velocityY = 0;
+    onGround = true;
+}
+
+    // KIRIM POSISI
+    socket.emit("move",{
+
+        x: player.position.x,
+        y: player.position.y,
+        z: player.position.z
+
+    });
+
+
+    // KAMERA
+    camera.position.x = player.position.x;
+    camera.position.y = 5;
+    camera.position.z = player.position.z + 8;
+
+    camera.lookAt(player.position);
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+animate();
+
+window.addEventListener("touchstart", () => {
+
+    if (onGround) {
+        velocityY = jumpPower;
+        onGround = false;
+    }
+
+});
+
+// RESIZE
+window.addEventListener("resize",()=>{
+
+    camera.aspect =
+    window.innerWidth /
+    window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+
+});

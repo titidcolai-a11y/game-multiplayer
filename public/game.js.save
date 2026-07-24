@@ -1,0 +1,163 @@
+import * as THREE from "https://unpkg.com/three@0.180.0/build/three.module.js";
+import { joystick, jump } from "./joystick.js";
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87ceeb);
+
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Tanah
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(100, 100),
+  new THREE.MeshStandardMaterial({ color: 0x33aa33 })
+);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+// Hutan
+for (let i = 0; i < 30; i++) {
+
+  const x = Math.random() * 80 - 40;
+  const z = Math.random() * 80 - 40;
+
+  const trunk = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.2, 0.2, 2, 12),
+    new THREE.MeshStandardMaterial({ color: 0x8B4513 })
+  );
+  trunk.position.set(x, 1, z);
+  scene.add(trunk);
+
+  const leaves = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 16, 16),
+    new THREE.MeshStandardMaterial({ color: 0x228B22 })
+  );
+  leaves.position.set(x, 2.5, z);
+  scene.add(leaves);
+}
+
+// Player
+const player = new THREE.Group();
+
+// Badan
+const body = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1.5, 0.6),
+  new THREE.MeshStandardMaterial({ color: 0x0066ff })
+);
+body.position.y = 1.5;
+player.add(body);
+
+// Kepala
+const head = new THREE.Mesh(
+  new THREE.SphereGeometry(0.35, 32, 32),
+  new THREE.MeshStandardMaterial({ color: 0xffd6b3 })
+);
+head.position.y = 2.6;
+player.add(head);
+
+// Tangan kiri
+const leftArm = new THREE.Mesh(
+  new THREE.BoxGeometry(0.25, 1, 0.25),
+  new THREE.MeshStandardMaterial({ color: 0xffd6b3 })
+);
+leftArm.position.set(-0.7, 1.6, 0);
+player.add(leftArm);
+
+// Tangan kanan
+const rightArm = leftArm.clone();
+rightArm.position.x = 0.7;
+player.add(rightArm);
+
+// Kaki kiri
+const leftLeg = new THREE.Mesh(
+  new THREE.BoxGeometry(0.3, 1, 0.3),
+  new THREE.MeshStandardMaterial({ color: 0x222222 })
+);
+leftLeg.position.set(-0.2, 0.5, 0);
+player.add(leftLeg);
+
+// Kaki kanan
+const rightLeg = leftLeg.clone();
+rightLeg.position.x = 0.2;
+player.add(rightLeg);
+
+player.position.y = 0;
+scene.add(player);
+
+// Cahaya
+const light = new THREE.DirectionalLight(0xffffff, 2);
+light.position.set(5,10,5);
+scene.add(light);
+
+const ambient = new THREE.AmbientLight(0xffffff,0.5);
+scene.add(ambient);
+
+// Kamera
+camera.position.set(0,5,8);
+camera.lookAt(player.position);
+let speed = 0.1;
+let velocityY = 0;
+let onGround = true;
+
+let camAngle = 0;
+
+window.addEventListener("touchmove", (e) => {
+  if (e.touches.length === 1) {
+    camAngle += e.touches[0].clientX * 0.0005;
+  }
+});
+
+// Loop
+function animate(){
+  requestAnimationFrame(animate);
+
+player.position.x += joystick.x * speed;
+player.position.z += joystick.y * speed;
+
+const moving = Math.abs(joystick.x) > 0.1 || Math.abs(joystick.y) > 0.1;
+
+if (moving) {
+  const swing = Math.sin(Date.now() * 0.01) * 0.8;
+
+  leftArm.rotation.x = swing;
+  rightArm.rotation.x = -swing;
+
+  leftLeg.rotation.x = -swing;
+  rightLeg.rotation.x = swing;
+} else {
+  leftArm.rotation.x = 0;
+  rightArm.rotation.x = 0;
+  leftLeg.rotation.x = 0;
+  rightLeg.rotation.x = 0;
+}
+
+if (jump && onGround) {
+  velocityY = 0.25;
+  onGround = false;
+}
+// Gravitasi
+velocityY -= 0.01;
+player.position.y += velocityY;
+
+// Menyentuh tanah
+if (player.position.y <= 1) {
+  player.position.y = 1;
+  velocityY = 0;
+  onGround = true;
+}
+
+camera.position.x += (player.position.x - camera.position.x) * 0.08;
+  camera.position.z += (player.position.z + 8 - camera.position.z) * 0.08;
+  camera.lookAt(player.position);
+
+  renderer.render(scene,camera);
+}
+
+animate();
