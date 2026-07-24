@@ -85,13 +85,39 @@ function createGrass(x, z) {
 }
 
 // Sebar rumput
-for (let i = 0; i < 3000; i++) {
+const grassChunks = {};
+const chunkSize = 50;
 
-    createGrass(
-        (Math.random() - 0.5) * 180,
-        (Math.random() - 0.5) * 180
-    );
+function createGrassChunk(cx, cz){
 
+    const key = cx + "_" + cz;
+
+    if(grassChunks[key]) return;
+
+    for(let i = 0; i < 80; i++){
+
+        createGrass(
+            cx * chunkSize + (Math.random()-0.5)*chunkSize,
+            cz * chunkSize + (Math.random()-0.5)*chunkSize
+        );
+
+    }
+
+    grassChunks[key] = true;
+}
+
+function updateGrass(playerX, playerZ){
+
+    const cx = Math.floor(playerX / chunkSize);
+    const cz = Math.floor(playerZ / chunkSize);
+
+    for(let x=-2; x<=2; x++){
+        for(let z=-2; z<=2; z++){
+
+            createGrassChunk(cx+x, cz+z);
+
+        }
+    }
 }
 
 // PLAYER SENDIRI (Mirip Steve)
@@ -297,7 +323,10 @@ function animate(){
     // JOYSTICK
 player.position.x += joystick.x * speed;
 player.position.z += joystick.y * speed;
-
+updateGrass(
+    player.position.x,
+    player.position.z
+);
 
 // Animasi jalan
 const moving =
