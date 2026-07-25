@@ -50,6 +50,7 @@ light.shadow.camera.near = 1;
 light.shadow.camera.far = 100;
 light.position.set(5,10,5);
 scene.add(light);
+scene.add(light.target);
 
 const ambient = new THREE.AmbientLight(0xffffff,0.5);
 scene.add(ambient);
@@ -85,39 +86,13 @@ function createGrass(x, z) {
 }
 
 // Sebar rumput
-const grassChunks = {};
-const chunkSize = 50;
+for (let i = 0; i < 3000; i++) {
 
-function createGrassChunk(cx, cz){
+    createGrass(
+        (Math.random() - 0.5) * 180,
+        (Math.random() - 0.5) * 180
+    );
 
-    const key = cx + "_" + cz;
-
-    if(grassChunks[key]) return;
-
-    for(let i = 0; i < 80; i++){
-
-        createGrass(
-            cx * chunkSize + (Math.random()-0.5)*chunkSize,
-            cz * chunkSize + (Math.random()-0.5)*chunkSize
-        );
-
-    }
-
-    grassChunks[key] = true;
-}
-
-function updateGrass(playerX, playerZ){
-
-    const cx = Math.floor(playerX / chunkSize);
-    const cz = Math.floor(playerZ / chunkSize);
-
-    for(let x=-2; x<=2; x++){
-        for(let z=-2; z<=2; z++){
-
-            createGrassChunk(cx+x, cz+z);
-
-        }
-    }
 }
 
 // PLAYER SENDIRI (Mirip Steve)
@@ -323,8 +298,15 @@ function animate(){
     // JOYSTICK
 player.position.x += joystick.x * speed;
 player.position.z += joystick.y * speed;
-updateGrass(
+light.position.set(
+    player.position.x + 5,
+    10,
+    player.position.z + 5
+);
+
+light.target.position.set(
     player.position.x,
+    0,
     player.position.z
 );
 
