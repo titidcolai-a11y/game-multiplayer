@@ -48,7 +48,11 @@ light.shadow.camera.bottom = -50;
 
 light.shadow.camera.near = 1;
 light.shadow.camera.far = 100;
-light.position.set(5,10,5);
+light.position.set(
+    player.position.x + 5,
+    player.position.y + 10,
+    player.position.z + 5
+);
 scene.add(light);
 scene.add(light.target);
 
@@ -410,6 +414,11 @@ light.position.set(
     player.position.x + 5,
     10,
     player.position.z + 5
+);
+
+renderer.render(
+    scene,
+    camera
 );
 
 light.target.position.set(
