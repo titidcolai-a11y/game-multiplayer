@@ -94,6 +94,78 @@ for (let i = 0; i < 3000; i++) {
     );
 
 }
+// POHON
+function createTree(x, z){
+
+    const tree = new THREE.Group();
+
+    // Tinggi batang acak
+    const trunkHeight = 3 + Math.random() * 4;
+
+    const trunk = new THREE.Mesh(
+        new THREE.BoxGeometry(0.8, trunkHeight, 0.8),
+        new THREE.MeshStandardMaterial({
+            color: 0x6b4f2a
+        })
+    );
+
+    trunk.position.y = trunkHeight / 2;
+    trunk.castShadow = true;
+    trunk.receiveShadow = true;
+    tree.add(trunk);
+
+    // Daun acak
+    const leafSize = 2 + Math.random() * 2;
+
+    const leafMaterial = new THREE.MeshStandardMaterial({
+    color: 0x228B22
+});
+
+const leafPos = [
+    [0, 0, 0],
+    [1, 0, 0],
+    [-1, 0, 0],
+    [0, 0, 1],
+    [0, 0, -1],
+    [0, 1, 0],
+    [0, -1, 0]
+];
+
+leafPos.forEach(p => {
+
+    const leaf = new THREE.Mesh(
+        new THREE.BoxGeometry(2,2,2),
+        leafMaterial
+    );
+
+    leaf.position.set(
+        p[0],
+        trunkHeight + 2 + p[1],
+        p[2]
+    );
+
+    leaf.castShadow = true;
+    leaf.receiveShadow = true;
+
+    tree.add(leaf);
+
+});
+
+    tree.position.set(x,0,z);
+
+    scene.add(tree);
+
+}
+
+// Sebar pohon
+for(let i = 0; i < 120; i++){
+
+    createTree(
+        (Math.random() - 0.5) * 450,
+        (Math.random() - 0.5) * 450
+    );
+
+}
 
 // PLAYER SENDIRI (Mirip Steve)
 
@@ -111,6 +183,37 @@ const head = new THREE.Mesh(
 head.position.y = 2.4;
 player.add(head);
 
+// Mata kiri
+const eyeLeft = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08,0.08,0.02),
+    new THREE.MeshStandardMaterial({ color:0x000000 })
+);
+eyeLeft.position.set(-0.15,2.45,0.41);
+player.add(eyeLeft);
+
+// Mata kanan
+const eyeRight = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08,0.08,0.02),
+    new THREE.MeshStandardMaterial({ color:0x000000 })
+);
+eyeRight.position.set(0.15,2.45,0.41);
+player.add(eyeRight);
+
+// Hidung
+const nose = new THREE.Mesh(
+    new THREE.BoxGeometry(0.05,0.08,0.03),
+    new THREE.MeshStandardMaterial({ color:0xf2c19b })
+);
+nose.position.set(0,2.32,0.42);
+player.add(nose);
+
+// Mulut
+const mouth = new THREE.Mesh(
+    new THREE.BoxGeometry(0.18,0.03,0.02),
+    new THREE.MeshStandardMaterial({ color:0x552222 })
+);
+mouth.position.set(0,2.15,0.41);
+player.add(mouth);
 
 // Rambut
 const hair = new THREE.Mesh(
@@ -296,8 +399,8 @@ function animate(){
 
 
     // JOYSTICK
-player.position.x += joystick.x * speed;
-player.position.z += joystick.y * speed;
+player.position.x -= joystick.x * speed;
+player.position.z -= joystick.y * speed;
 light.position.set(
     player.position.x + 5,
     10,
@@ -338,6 +441,18 @@ if (moving) {
     head.rotation.y = 0;
 
 }
+
+// Mata berkedip
+const blink = Math.sin(Date.now() * 0.004);
+
+if (blink > 0.98) {
+    eyeLeft.scale.y = 0.1;
+    eyeRight.scale.y = 0.1;
+} else {
+    eyeLeft.scale.y = 1;
+    eyeRight.scale.y = 1;
+}
+
 // Gravitasi
 velocityY += gravity;
 player.position.y += velocityY;
