@@ -155,7 +155,8 @@ leafPos.forEach(p => {
 
 console.log("POHON DIBUAT", x, z);
 
-    scene.add(tree);
+    tree.scale.set(5,5,5);
+scene.add(tree);
 
 }
 
