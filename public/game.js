@@ -2,6 +2,8 @@ import * as THREE from "https://unpkg.com/three@0.180.0/build/three.module.js";
 import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
 import { joystick } from "./joystick.js";
 
+console.log("GAME JS TERBARU AKTIF");
+
 const socket = io();
 
 
