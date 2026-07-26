@@ -167,6 +167,8 @@ for(let i = 0; i < 120; i++){
 
 }
 
+createTree(5,5);
+
 // PLAYER SENDIRI (Mirip Steve)
 
 const player = new THREE.Group();
