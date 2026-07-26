@@ -153,6 +153,8 @@ leafPos.forEach(p => {
 
     tree.position.set(x,0,z);
 
+console.log("POHON DIBUAT", x, z);
+
     scene.add(tree);
 
 }
