@@ -160,7 +160,7 @@ console.log("POHON DIBUAT", x, z);
 }
 
 // Sebar pohon
-for(let i = 0; i < 120; i++){
+for(let i = 0; i < 10; i++){
 
     createTree(
         (Math.random() - 0.5) * 450,
